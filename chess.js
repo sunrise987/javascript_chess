@@ -424,8 +424,7 @@ Board.prototype.checkMate = function(playerColor) {
   // 3. Cannot block all checks.
   if (blackInCheck && blackCheckedBy.length != 0) {
     // for all pieces checking king, find whether can be blocked.
-    var pos = blockCheckedBy.pop();
-    for (var piece = this.board[
+    // ------------- TODO
   } else 
     console.log("error. piece causing black king check is unknown.");
     
