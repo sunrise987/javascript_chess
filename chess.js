@@ -18,8 +18,8 @@ PieceEnum = {
 // Both are updated every single move.
 blackInCheck = false; 
 whiteInCheck = false;
-blackCheckedBy = new Array();
-whiteCheckedBy = new Array();
+blackCheckedFrom = null; 
+whiteCheckedFrom = null; 
 // ----------------------------- TODO : update variables when check is undone. 
 
 // Castling variables, keep track if castling is legal.
@@ -358,7 +358,7 @@ Board.prototype.isCheck = function(playerColor, pos1, pos2) {
 
           } else {
             blackInCheck = true;
-            blackCheckedBy.push(pos);
+            blackCheckedFrom = pos;
             blackRightCastling = false;
             blackLeftCastling = false;
             console.log("Black King was checked.");
@@ -396,6 +396,7 @@ Board.prototype.isCheck = function(playerColor, pos1, pos2) {
 
 // Check if this player is getting checked / will lose the game.
 Board.prototype.checkMate = function(playerColor) {
+  
   // 1. King is checked.
   if ( !blackInCheck && playerColor == Player.ColorEnum.BLACK) { 
     return false;
@@ -420,15 +421,90 @@ Board.prototype.checkMate = function(playerColor) {
       }
     }
   }
-  return true;  
-  // 3. Cannot block all checks.
-  if (blackInCheck && blackCheckedBy.length != 0) {
-    // for all pieces checking king, find whether can be blocked.
-    // ------------- TODO
-  } else 
-    console.log("error. piece causing black king check is unknown.");
-    
+
+  // 3. Cannot block / remove the check.
+  var attackingPos;
+  if (playerColor == Player.ColorEnum.BLACK) {
+    if (blackCheckedFrom == null)
+      console.log("error. piece causing black king check is unknown.");
+
+    // Can take the opponents checking piece? 
+    if (isAttacked(Player.ColorEnum.WHITE, blackCheckedFrom))  
+      return false;
+    attackingPos = blackCheckedFrom;
+
+  } else {
+    if (whiteCheckedFrom == null)
+      console.log("error. piece causing white king check is unknown.");
+
+    // Can take the opponents checking piece? 
+    if (isAttacked(Player.ColorEnum.BLACK, whiteCheckedFrom))  
+      return false;
+    attackingPos = whiteCheckedFrom;
+  }
+
+  // Can block opponents piece?
+  switch (attackingPos) {
+    case PieceEnum.KNIGHT: // Cannot.
+    case PieceEnum.KING: //what? withdraw?
+    case PieceEnum.PAWN: // If cannot be eaten, then game is over.
+    case PieceEnum.QUEEN:
+      return Board.canBlockAttackFromQueen(playerColor, attackingPos, pos);
+    case PieceEnum.BISHOP:
+      return Board.canBlockAttackFromBishop(playerColor, attackingPos, pos);
+    case PieceEnum.ROOK:
+      return Board.canBlockAttackFromRook(playerColor, attackingPos, pos);
+  }
+  return true; 
 }
+
+// TODO: A part of this function is very similar to isLegalMoveROOK function. Think about a way to refactor
+// both functions so that you can share code.
+Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos, attackedPos) {
+  var piecePositions = Board.getAllPieces(playerColor);
+
+  if (attakingPos.x == attackedPos.x) { // Vertical.
+    var start = Math.min(attackingPos.y, attackedPos.y);
+    var end = Math.max(attackingPos.y, attackedPos.y);
+
+    for (var k = 0; k < piecePositions.length; k++) {
+      var pos1 = piecePositions[k];
+
+      // for all positions in between:
+      for (var j = start + 1; j < end; j++) {
+        var pos2 = { 'x' : attackingPos.x, 'y' : j};
+
+        if (isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
+          return true;
+      }
+    }
+
+  } else if (attackingPos.y == attackedPos.y) { // Horizontal.
+    var start = Math.min(attackingPos.x, attackedPos.x);
+    var end = Math.max(attackingPos.x, attackedPos.x);
+
+    for (var k = 0; k < piecePositions.length; k++) {
+      var pos1 = piecePositions[k];
+
+      // for all positions in between:
+      for (var i = start + 1; i < end; i++) {
+        var pos2 = { 'x' : i, 'y' : attackingPos.y};
+
+        if (isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
+          return true;
+      }
+    }
+  } else {
+    console.log("Something is wrong. Wrong function canBlockAttackFromRook called.");
+  }
+}
+
+Board.prototype.canBlockAttackFromBishop = function(playerColor, attackingPos, attackedPos) {
+
+}
+
+Board.prototype.canBlockAttackFromQueen = function(playerColor, attackingPos, attackedPos) {}
+
 
 Board.prototype.updateBoard = function(piece, pos1, pos2, playerColor) {
   
@@ -699,15 +775,24 @@ Board.prototype.isAttackedByPawn = function(playerColor, pos) {
   return false;
 }
   
+Board.prototype.isAttackedByKing = function(playerColor, pos) {
+  if (playerColor == Player.ColorEnum.WHITE && this.isLegalMoveKING(!playerColor, blackKingPos, pos) &&
+      !isAttacked(!playerColor, pos))
+    return true;
+  else if (playerColor == Player.ColorEnum.BLACK && this.isLegalMoveKING(!playerColor, whiteKingPos, pos) &&
+      !isAttacked(!playerColor, pos))
+    return true;
+  return false;
+}
 
 Board.prototype.isAttacked = function(playerColor, pos) {
   if (this.isAttackedByKnight(playerColor, pos) ||
       this.isAttackedByRookOrQueen(playerColor, pos) ||
       this.isAttackedByBishopOrQueen(playerColor, pos) ||
-      this.isAttackedByPawn(playerColor, pos))
+      this.isAttackedByPawn(playerColor, pos) || 
+      this.isAttackedByKing(playerColor, pos))
     return true;
   return false;
-    // TODO: Is attacked by a King? (is this code necessary?)
 }
 
 // The following handlers are from : http://www.html5rocks.com/en/tutorials/dnd/basics/
