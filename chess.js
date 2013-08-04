@@ -15,34 +15,15 @@ PieceEnum = {
   PAWN  : 5
 }
 
-// Both are updated every single move.
-blackInCheck = false; 
-whiteInCheck = false;
-blackCheckedFrom = null; 
-whiteCheckedFrom = null; 
-// ----------------------------- TODO : update variables when check is undone. 
-
-// Castling variables, keep track if castling is legal.
-blackRightCastling = true;
-blackLeftCastling = true;
-whiteRightCastling = true;
-whiteLeftCastling = true;
-
-// Keep track of Kings.
-whiteKingPos = {'x' : 4, 'y' : 7};
-blackKingPos = {'x' : 4, 'y' : 0}; 
-
 Board.emptyCellHTML  = '<span class="block" draggable="true"></span>';
 
 Board.UpdateStateEnum = {
   ILLEGAL_MOVE      : 0,
   OK_MOVE           : 1,
-  CASTLING_BLACK_L  : 2,
-  CASTLING_BLACK_R  : 3,
-  CASTLING_WHITE_R  : 4,
-  CASTLING_WHITE_L  : 5,
-  PAWN_PROMOTION    : 6,
-  GAME_OVER         : 7
+  CASTLING_RIGHT    : 2,
+  CASTLING_LEFT     : 3,
+  PAWN_PROMOTION    : 4,
+  GAME_OVER         : 5
 }
 
 // Player:
@@ -59,22 +40,22 @@ Player.ColorEnum = { BLACK : 0, WHITE : 1 }
 // Board:
 Board.prototype.isLegalMove = function(piece, playerColor, pos1, pos2) {
   switch (piece) {
-    case PieceEnum.ROOK: 
-      return this.isLegalMoveROOK(playerColor, pos1, pos2);      
+    case PieceEnum.ROOK:
+      return this.isLegalMoveROOK(playerColor, pos1, pos2);
 
-    case PieceEnum.KING: 
+    case PieceEnum.KING:
       return this.isLegalMoveKING(playerColor, pos1, pos2);
 
-    case PieceEnum.QUEEN: 
+    case PieceEnum.QUEEN:
       return this.isLegalMoveQUEEN(playerColor, pos1, pos2);
 
-    case PieceEnum.BISHOP: 
+    case PieceEnum.BISHOP:
       return this.isLegalMoveBISHOP(playerColor, pos1, pos2);
 
-    case PieceEnum.KNIGHT: 
+    case PieceEnum.KNIGHT:
       return this.isLegalMoveKNIGHT(playerColor, pos1, pos2);
 
-    case PieceEnum.PAWN: 
+    case PieceEnum.PAWN:
       return this.isLegalMovePAWN(playerColor, pos1, pos2);
   }
 }
@@ -84,19 +65,19 @@ Board.prototype.isLegalMoveROOK = function(playerColor, pos1, pos2) {
     return false;
   if (pos1.x == pos2.x) { // Location is correct.
     var end = Math.max(pos1.y, pos2.y);
-    var start = Math.min(pos1.y, pos2.y); 
+    var start = Math.min(pos1.y, pos2.y);
 
     // Verify there is no pieces in between.
     for (var j = start +1; j < end; j++) {
       if (this.board[pos1.x][j] != null)
         return false;
     }
-  
+
     return true;
 
   } else if (pos1.y == pos2.y) { // Location is correct.
     var end = Math.max(pos1.x, pos2.x);
-    var start = Math.min(pos1.x, pos2.x); 
+    var start = Math.min(pos1.x, pos2.x);
 
     // Verify there is no pieces in between.
     for ( var i = start +1; i < end; i++) {
@@ -112,7 +93,7 @@ Board.prototype.isLegalMoveKNIGHT = function(playerColor, pos1, pos2) {
   if (this.board[pos2.x][pos2.y] != null && this.board[pos2.x][pos2.y].color == playerColor)
     return false;
 
-  // All possible moves: 
+  // All possible moves:
   if (pos1.x +2 == pos2.x && (pos1.y +1 == pos2.y  || pos1.y -1 == pos2.y))
     return true;
   else if (pos1.x +1 == pos2.x && (pos1.y +2 == pos2.y || pos1.y -2 == pos2.y))
@@ -122,7 +103,7 @@ Board.prototype.isLegalMoveKNIGHT = function(playerColor, pos1, pos2) {
   else if (pos1.x -1 == pos2.x && (pos1.y +2 == pos2.y || pos1.y -2 == pos2.y))
     return true;
   return false;
-}         
+}
 
 Board.prototype.isLegalMovePAWN = function(playerColor, pos1, pos2) {
   if (this.board[pos2.x][pos2.y] == null ) { // Simply move forward.
@@ -137,12 +118,12 @@ Board.prototype.isLegalMovePAWN = function(playerColor, pos1, pos2) {
     }
 
   } else { // Capture opponent's piece.
-    if (this.board[pos2.x][pos2.y].color != playerColor) { 
+    if (this.board[pos2.x][pos2.y].color != playerColor) {
       if (playerColor == Player.ColorEnum.BLACK &&
           ((pos1.x +1 == pos2.x && pos1.y +1 == pos2.y) ||
            (pos1.x -1 == pos2.x && pos1.y +1 == pos2.y)))
         return true;
-      else if (playerColor == Player.ColorEnum.WHITE && 
+      else if (playerColor == Player.ColorEnum.WHITE &&
           ((pos1.x -1 == pos2.x && pos1.y -1 == pos2.y) ||
            (pos1.x +1 == pos2.x && pos1.y -1 == pos2.y)))
         return true;
@@ -156,7 +137,7 @@ Board.prototype.isLegalMoveBISHOP = function(playerColor, pos1, pos2) {
   diffY = pos2.y - pos1.y;
   if (Math.abs(diffX) != Math.abs(diffY))
     return false;
-  else if (this.board[pos2.x][pos2.y] != null && 
+  else if (this.board[pos2.x][pos2.y] != null &&
       this.board[pos2.x][pos2.y].color == playerColor)
     return false;
   else {
@@ -165,20 +146,20 @@ Board.prototype.isLegalMoveBISHOP = function(playerColor, pos1, pos2) {
 
     while (i != pos2.x && j != pos2.y) {
       if (diffY > 0) j++;
-      else j--; 
+      else j--;
       if (diffX > 0) i++;
-      else i--; 
+      else i--;
       if (i == pos2.x || j == pos2.y)
-        break; 
+        break;
 
       if (this.board[i][j] != null)
         return false;
-    } 
+    }
   }
   return true;
 }
 
-Board.prototype.isLegalMoveQUEEN = function(playerColor, pos1, pos2) {  
+Board.prototype.isLegalMoveQUEEN = function(playerColor, pos1, pos2) {
   return (this.isLegalMoveBISHOP(playerColor, pos1, pos2) ||
       this.isLegalMoveROOK(playerColor, pos1, pos2));
 }
@@ -190,7 +171,7 @@ Board.prototype.isLegalMoveKING = function(playerColor, pos1, pos2) {
       (pos1.x -1 == pos2.x && (pos1.y == pos2.y || pos1.y +1 == pos2.y || pos1.y -1 == pos2.y)) ||
       (pos1.x == pos2.x && (pos1.y +1 == pos2.y || pos1.y -1 == pos2.y)))
     return true;
-  
+
   return false;
 }
 
@@ -230,6 +211,24 @@ function Board () {
   this.board[5][7] = { 'piece' : PieceEnum.BISHOP, 'color' : Player.ColorEnum.WHITE};
   this.board[6][7] = { 'piece' : PieceEnum.KNIGHT, 'color' : Player.ColorEnum.WHITE};
   this.board[7][7] = { 'piece' : PieceEnum.ROOK, 'color' : Player.ColorEnum.WHITE};
+
+  // Initialize King variables:
+  var initKing = function(y) {
+    return {
+      'inCheck'       : false, // Updated every single move.
+      'checkedFrom'   : null,  // TODO : update variables when check is undone.
+      //Castling variables, keep track if castling is legal.
+      'rightCastling' : true,
+      'leftCastling'  : true,
+      'pos'           : { 'x' : 4, 'y' : y}
+    }
+  }
+
+  this.kings = new Array();
+  this.kings[Player.ColorEnum.BLACK] = initKing(0);
+  this.kings[Player.ColorEnum.WHITE] = initKing(7);
+
+  //  // Keep track of Kings.
 }
 
 Board.prototype.checkBoardCorrectness = function() {
@@ -265,7 +264,7 @@ Board.prototype.drawBoard = function() {
     for (var i = 0; i < 8; i++) {
       var id = String.fromCharCode("A".charCodeAt(0) + i) + (j + 1);
       var cell = document.getElementById(id);
-      
+
       if (this.board[i][j] != null) {
         var unicode = this.toUnicode(this.board[i][j].piece, this.board[i][j].color);
         cell.innerHTML = '<span class="block" draggable="true">&#' + unicode + ';</span>';
@@ -286,27 +285,27 @@ Board.prototype.drawBoard = function() {
   document.getElementById("turn").innerText = "White";
 }
 
-Board.prototype.isOkMove = function(piece, pos1, pos2, playerColor) { 
+Board.prototype.isOkMove = function(piece, pos1, pos2, playerColor) {
   // Check correctness:
   // 0. check if correct player.
   if (this.board[pos1.x][pos1.y].color != playerColor) {
     return Board.UpdateStateEnum.ILLEGAL_MOVE;
   }
 
-  // 1. piece at is currently at pos1. 
-  if (this.board[pos1.x][pos1.y] == null || 
+  // 1. piece at is currently at pos1.
+  if (this.board[pos1.x][pos1.y] == null ||
       this.board[pos1.x][pos1.y].piece != piece) {
     return Board.UpdateStateEnum.ILLEGAL_MOVE;
   }
 
   // 2. pos2 is available.
-  if (this.board[pos2.x][pos2.y] != null && 
+  if (this.board[pos2.x][pos2.y] != null &&
       this.board[pos2.x][pos2.y].color == playerColor) {
-    return Board.UpdateStateEnum.ILLEGAL_MOVE; 
+    return Board.UpdateStateEnum.ILLEGAL_MOVE;
   }
 
   // If castling move:
-  var castlingState = this.performCastling(piece, pos1, pos2, playerColor); 
+  var castlingState = this.performCastling(piece, pos1, pos2, playerColor);
   if (castlingState != Board.UpdateStateEnum.ILLEGAL_MOVE)
     return castlingState;
 
@@ -315,14 +314,14 @@ Board.prototype.isOkMove = function(piece, pos1, pos2, playerColor) {
     return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
   // 3. Move if currentPlayer does not yield into a check to currentPlayer's King.
-  if (this.isCheck(playerColor, pos1, pos2) == Board.UpdateStateEnum.ILLEGAL_MOVE)
+  if (this.isCheck(playerColor, playerColor, pos1, pos2) == Board.UpdateStateEnum.ILLEGAL_MOVE)
     return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
   // Is game over?
   if (this.checkMate(playerColor)) {
     if (playerColor == Player.ColorEnum.BLACK)
       prompt("Game is over. White has won the game.");
-    else if (playerColor == Player.ColorEnum.WHITE) 
+    else if (playerColor == Player.ColorEnum.WHITE)
       prompt("Game is over. Black has won the game.");
   }
 
@@ -330,9 +329,9 @@ Board.prototype.isOkMove = function(piece, pos1, pos2, playerColor) {
 }
 
 // Update if a King was checked.
-Board.prototype.isCheck = function(playerColor, pos1, pos2) {
+Board.prototype.isCheck = function(playerColor, kingColor, pos1, pos2) {
   var before = this.board[pos2.x][pos2.y];
-  this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y]; 
+  this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y];
   this.board[pos1.x][pos1.y] = null;
 
   var pos = { 'x' : 0, 'y' : 0 };
@@ -345,43 +344,24 @@ Board.prototype.isCheck = function(playerColor, pos1, pos2) {
       if (this.board[i][j] != null) {
         pos.x = i;
         pos.y = j;
-        if (this.board[i][j].color == Player.ColorEnum.WHITE && 
-            this.isLegalMove(this.board[i][j].piece, this.board[i][j].color, pos, blackKingPos)) {
+        if (this.isLegalMove(this.board[i][j].piece, this.board[i][j].color, pos,
+        this.kings[kingColor].pos)) {
 
           // put back the pieces where they were.
           this.board[pos1.x][pos1.y] = this.board[pos2.x][pos2.y];
           this.board[pos2.x][pos2.y] = before;
 
-          if (playerColor == Player.ColorEnum.BLACK) { // player cannot cause it's own king to be checked. Error.
+          // player cannot cause it's own king to be checked. Error.
+          if (playerColor == kingColor) {
             console.log("This move will cause your king to be ckeced.");
             return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
           } else {
-            blackInCheck = true;
-            blackCheckedFrom = pos;
-            blackRightCastling = false;
-            blackLeftCastling = false;
+            this.kings[kingColor].inCheck = true;
+            this.kings[kingColor].checkedFrom = pos;
+            this.kings[kingColor].rightCastling = false;
+            this.kings[kingColor].leftCastling = false ;
             console.log("Black King was checked.");
-            return Board.UpdateStateEnum.OK_MOVE;
-          }
-
-        } else if (this.board[i][j].color == Player.ColorEnum.BLACK &&
-            this.isLegalMove(this.board[i][j].piece, this.board[i][j].color, pos, whiteKingPos)) {
-        
-          // put back the pieces where they were.
-          this.board[pos1.x][pos1.y] = this.board[pos2.x][pos2.y];
-          this.board[pos2.x][pos2.y] = before;
-
-          if (playerColor == Player.ColorEnum.WHITE) { // player cannot cause it's own king to be checked. Error.
-            console.log("This move will cause your king to be ckeced.");
-            return Board.UpdateStateEnum.ILLEGAL_MOVE;
-
-          } else {
-            whiteInCheck = true;
-            whiteCheckedBy.push(pos);
-            whiteRightCastling = false;
-            whiteLeftCastling = false;
-            console.log("White King was checked.");
             return Board.UpdateStateEnum.OK_MOVE;
           }
         }
@@ -392,56 +372,37 @@ Board.prototype.isCheck = function(playerColor, pos1, pos2) {
   this.board[pos1.x][pos1.y] = this.board[pos2.x][pos2.y];
   this.board[pos2.x][pos2.y] = before;
   return Board.UpdateStateEnum.OK_MOVE;
-}  
+}
 
 // Check if this player is getting checked / will lose the game.
 Board.prototype.checkMate = function(playerColor) {
-  
+
   // 1. King is checked.
-  if ( !blackInCheck && playerColor == Player.ColorEnum.BLACK) { 
+  if (!this.kings[playerColor].inCheck)
     return false;
-  } else if ( !whiteInCheck && playerColor == Player.ColorEnum.WHITE) { 
-    return false;
-  }
 
   // 2. Cannot move the king.
-  var pos2 = { 'x' : 0, 'y' : 0 } 
+  var pos2 = { 'x' : 0, 'y' : 0 }
   for (var i = -1; i <= 1; i++) {
-    for (var j = -1; j <= 1; j++) {  
-      if (playerColor == Player.ColorEnum.BLACK) { 
-        pos2.x = blackKingPos.x + i;
-        pos2.y = blackKingPos.y + j; 
-        if (this.isLegalMoveKING(playerColor, blackKingPos, pos2) && !this.isAttacked(playerColor, pos2))
-          return false;
-      } else {
-        pos2.x = whiteKingPos.x + i;
-        pos2.y = whiteKingPos.y + j; 
-        if (this.isLegalMoveKING(playerColor, whiteKingPos, pos2) && !this.isAttacked(playerColor, pos2))
-          return false;
-      }
+    for (var j = -1; j <= 1; j++) {
+
+      var pos1 = this.kings[playerColor].pos;
+      pos2.x = pos1.x + i;
+      pos2.y = pos1.y + j;
+      if (this.isLegalMoveKING(playerColor, pos1, pos2) &&
+          !this.isAttacked(playerColor, pos2))
+      return false;
     }
   }
 
   // 3. Cannot block / remove the check.
-  var attackingPos;
-  if (playerColor == Player.ColorEnum.BLACK) {
-    if (blackCheckedFrom == null)
-      console.log("error. piece causing black king check is unknown.");
+  var attackingPos = this.kings[playerColor].checkedFrom;
+  if (attackingPos == null)
+    console.log("error. piece causing check is unknown.");
 
-    // Can take the opponents checking piece? 
-    if (isAttacked(Player.ColorEnum.WHITE, blackCheckedFrom))  
-      return false;
-    attackingPos = blackCheckedFrom;
-
-  } else {
-    if (whiteCheckedFrom == null)
-      console.log("error. piece causing white king check is unknown.");
-
-    // Can take the opponents checking piece? 
-    if (isAttacked(Player.ColorEnum.BLACK, whiteCheckedFrom))  
-      return false;
-    attackingPos = whiteCheckedFrom;
-  }
+  // Can take the opponents checking piece?
+  if (isAttacked(!playerColor, attackingPos))
+    return false;
 
   // Can block opponents piece?
   switch (attackingPos) {
@@ -455,7 +416,7 @@ Board.prototype.checkMate = function(playerColor) {
     case PieceEnum.ROOK:
       return Board.canBlockAttackFromRook(playerColor, attackingPos, pos);
   }
-  return true; 
+  return true;
 }
 
 // TODO: A part of this function is very similar to isLegalMoveROOK function. Think about a way to refactor
@@ -474,7 +435,7 @@ Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos, att
       for (var j = start + 1; j < end; j++) {
         var pos2 = { 'x' : attackingPos.x, 'y' : j};
 
-        if (isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
+        if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
           return true;
       }
     }
@@ -490,7 +451,7 @@ Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos, att
       for (var i = start + 1; i < end; i++) {
         var pos2 = { 'x' : i, 'y' : attackingPos.y};
 
-        if (isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
+        if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
           return true;
       }
     }
@@ -507,47 +468,34 @@ Board.prototype.canBlockAttackFromQueen = function(playerColor, attackingPos, at
 
 
 Board.prototype.updateBoard = function(piece, pos1, pos2, playerColor) {
-  
-  var state = this.isOkMove(piece, pos1, pos2, playerColor); 
+
+  var state = this.isOkMove(piece, pos1, pos2, playerColor);
   if (state == Board.UpdateStateEnum.ILLEGAL_MOVE)
     return state;
 
   this.updateMoveOnBoard(piece, playerColor, pos1, pos2);
 
-  
+
   return Board.UpdateStateEnum.OK_MOVE;
 }
 
 Board.prototype.updateMoveOnBoard = function(piece, playerColor, pos1, pos2) {
-  this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y]; 
+  this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y];
   this.board[pos1.x][pos1.y] = null;
 
   // Update castling variables.
   if (piece == PieceEnum.ROOK) {
-    if (playerColor == Player.ColorEnum.BLACK && pos1.y == 0) {
-      if (pos1.x ==7)
-        blackRightCastling = false;
-      else if (pos1.x == 0)
-        blackLeftCastling = false;
-    } else if (playerColor == Player.ColorEnum.WHITE && pos1.y == 7) {
-      if (pos1.x == 7)
-        whiteRightCastling = false;
-      else if (pos1.x == 0)
-        whiteLeftCastling = false;
-    }
+    if (pos1.x == 7)
+      this.kings[playerColor].rightCastling = false;
+    else if (pos1.x == 0)
+      this.kings[playerColor].leftCastling = false;
   }
+
   if (piece == PieceEnum.KING) {
-    if (playerColor == Player.ColorEnum.BLACK) {
-      blackRightCastling = false;
-      blackLeftCastling = false;
-      blackKingPos.x = pos2.x;
-      blackKingPos.y = pos2.y;
-    } else {
-      whiteRightCastling = false;
-      whiteLeftCastling = false;
-      whiteKingPos.x = pos2.x;
-      whiteKingPos.y = pos2.y;
-    }
+      this.kings[playerColor].rightCastling = false;
+      this.kings[playerColor].leftCastling = false;
+      this.kings[playerColor].pos.x = pos2.x;
+      this.kings[playerColor].pos.y = pos2.y;
   }
 
   // If Pawn reached end, promote it.
@@ -561,85 +509,54 @@ Board.prototype.updateMoveOnBoard = function(piece, playerColor, pos1, pos2) {
       return Board.UpdateStateEnum.PAWN_PROMOTION;
     }
   }
-
-
 }
 
 Board.prototype.performCastling = function(piece, pos1, pos2, playerColor) {
+  if (piece == PieceEnum.KING)
+    return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
-  // If requested, perform castling and update variables.
-  if (piece == PieceEnum.KING) {
-    if (playerColor == Player.ColorEnum.BLACK) {
-      if (blackRightCastling && pos2.x == 6 && pos2.y == 0 && pos1.x == 4 && pos1.y == 0 &&
-          this.board[6][0] == null && this.board[5][0] == null) {
-        // Move Rook.
-        this.board[5][0] = this.board[7][0];
-        this.board[7][0] = null;
-        // Move King.
-        this.board[6][0] = this.board[pos1.x][pos1.y]; 
-        this.board[pos1.x][pos1.y] = null;
-        // Update variables.
-        blackRightCastling = false;
-        blackLeftCastling = false;
-        blackKingPos.x = pos2.x;
-        blackKingPos.y = pos2.y;
-        return Board.UpdateStateEnum.CASTLING_BLACK_R;
-      }
-      else if (blackLeftCastling && pos2.x == 2 && pos2.y == 0 && pos1.x == 4 && pos1.y == 0 &&
-          this.board[1][0] == null && this.board[2][0] == null && this.board[3][0] == null) {
-        // Move Rook.
-        this.board[3][0] = this.board[0][0]; 
-        this.board[0][0] = null;
-        // Move King.
-        this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y]; 
-        this.board[pos1.x][pos1.y] = null;
-        // Update variables.
-        blackRightCastling = false;
-        blackLeftCastling = false;
-        blackKingPos.x = pos2.x;
-        blackKingPos.y = pos2.y;
-        return Board.UpdateStateEnum.CASTLING_BLACK_L;
-      }
-    } else if (playerColor == Player.ColorEnum.WHITE) {
-      if (whiteRightCastling && pos2.x == 6 && pos2.y == 7 && pos1.x == 4 && pos1.y == 7 &&
-          this.board[6][7] == null && this.board[5][7] == null) {
-        // Move Rook.
-        this.board[5][7] = this.board[7][7];
-        this.board[7][7] = null;
-        // Move King.
-        this.board[6][7] = this.board[pos1.x][pos1.y]; 
-        this.board[pos1.x][pos1.y] = null;
-        // Update variables.
-        whiteRightCastling = false;
-        whiteLeftCastling = false;
-        whiteKingPos.x = pos2.x;
-        whiteKingPos.y = pos2.y;
+  var y = 0;
+  if (playerColor == Player.ColorEnum.WHITE)
+    y = 7;
 
-        return Board.UpdateStateEnum.CASTLING_WHITE_R;
-      }
-      else if (whiteLeftCastling && pos2.x == 2 && pos2.y == 7 && pos1.x == 4 && pos1.y == 7 &&
-          this.board[1][7] == null && this.board[2][7] == null && this.board[3][7] == null) {
-        // Move Rook.
-        this.board[3][7] = this.board[0][7]; 
-        this.board[0][7] = null;
-        // Move King.
-        this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y]; 
-        this.board[pos1.x][pos1.y] = null;
-        // Update variables.
-        whiteRightCastling = false;
-        whiteLeftCastling = false;
-        whiteKingPos.x = pos2.x;
-        whiteKingPos.y = pos2.y;
+  if (pos1.x != 4 && pos1.y != y)
+    return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
-        return Board.UpdateStateEnum.CASTLING_WHITE_L;
-      }
-    }
+  if (this.kings[playerColor].rightCastling && pos2.x == 6 && pos2.y == y &&
+  this.board[6][y] == null && this.board[5][y] == null) {
+
+    // Move Rook.
+    this.board[5][y] = this.board[7][y];
+    this.board[7][y] = null;
+    // Move King.
+    this.board[6][y] = this.board[pos1.x][pos1.y];
+    this.board[pos1.x][pos1.y] = null;
+
+    var status = Board.UpdateStateEnum.CASTLING_RIGHT;
+
+  } else if (this.kings[playerColor].leftCastling && pos2.x == 2 &&
+    pos2.y == y && this.board[1][y] == null && this.board[2][y] == null &&
+  this.board[3][y] == null) {
+
+    // Move Rook.
+    this.board[3][y] = this.board[0][y];
+    this.board[0][y] = null;
+    // Move King.
+    this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y];
+    this.board[pos1.x][pos1.y] = null;
+
+    var status = Board.UpdateStateEnum.CASTLING_LEFT;
   }
-  return Board.UpdateStateEnum.ILLEGAL_MOVE;
+
+  // Update variables.
+  this.kings[playerColor].rightCastling = false;
+  this.kings[playerColor].leftCastling = false;
+  this.kings[playerColor].pos = pos2;
+  return status;
 }
 
 Board.prototype.isOpponentsPiece = function(playerColor, piece, x, y) {
-  return (this.board[x][y].color != playerColor && 
+  return (this.board[x][y].color != playerColor &&
       (this.board[x][y].piece == piece || this.board[x][y].piece == PieceEnum.QUEEN))
 }
 
@@ -649,36 +566,36 @@ Board.prototype.isAttackedFrom = function(playerColor, pos, pos_in_check) {
 }
 Board.prototype.isAttackedByKnight = function(playerColor, pos) {
   // Is attacked by a Knight?
-  if ((this.board[pos.x+1][pos.y+2] != null && 
-       this.board[pos.x+1][pos.y+2].piece == PieceEnum.KNIGHT && 
-       this.board[pos.x+1][pos.y+2].color != playerColor) || 
-      
-      (this.board[pos.x+2][pos.y+1] != null && 
-       this.board[pos.x+2][pos.y+1].piece == PieceEnum.KNIGHT && 
+  if ((this.board[pos.x+1][pos.y+2] != null &&
+       this.board[pos.x+1][pos.y+2].piece == PieceEnum.KNIGHT &&
+       this.board[pos.x+1][pos.y+2].color != playerColor) ||
+
+      (this.board[pos.x+2][pos.y+1] != null &&
+       this.board[pos.x+2][pos.y+1].piece == PieceEnum.KNIGHT &&
        this.board[pos.x+2][pos.y+1].color != playerColor) ||
-      
-      (this.board[pos.x+1][pos.y-2] != null && 
-       this.board[pos.x+1][pos.y-2].piece == PieceEnum.KNIGHT && 
-       this.board[pos.x+1][pos.y-2].color != playerColor) || 
-      
-      (this.board[pos.x+2][pos.y-1] != null && 
-       this.board[pos.x+2][pos.y-1].piece == PieceEnum.KNIGHT && 
-       this.board[pos.x+2][pos.y-1].color != playerColor) || 
-      
-      (this.board[pos.x-1][pos.y+2] != null && 
-       this.board[pos.x-1][pos.y+2].piece == PieceEnum.KNIGHT && 
-       this.board[pos.x-1][pos.y+2].color != playerColor) || 
-      
-      (this.board[pos.x-2][pos.y+1] != null && 
-       this.board[pos.x-2][pos.y+1].piece == PieceEnum.KNIGHT && 
-       this.board[pos.x-2][pos.y+1].color != playerColor) || 
-      
-      (this.board[pos.x-2][pos.y-1] != null && 
-       this.board[pos.x-2][pos.y-1].piece == PieceEnum.KNIGHT && 
-       this.board[pos.x-2][pos.y-1].color != playerColor) || 
-      
-      (this.board[pos.x-1][pos.y-2] != null && 
-       this.board[pos.x-1][pos.y-2].piece == PieceEnum.KNIGHT && 
+
+      (this.board[pos.x+1][pos.y-2] != null &&
+       this.board[pos.x+1][pos.y-2].piece == PieceEnum.KNIGHT &&
+       this.board[pos.x+1][pos.y-2].color != playerColor) ||
+
+      (this.board[pos.x+2][pos.y-1] != null &&
+       this.board[pos.x+2][pos.y-1].piece == PieceEnum.KNIGHT &&
+       this.board[pos.x+2][pos.y-1].color != playerColor) ||
+
+      (this.board[pos.x-1][pos.y+2] != null &&
+       this.board[pos.x-1][pos.y+2].piece == PieceEnum.KNIGHT &&
+       this.board[pos.x-1][pos.y+2].color != playerColor) ||
+
+      (this.board[pos.x-2][pos.y+1] != null &&
+       this.board[pos.x-2][pos.y+1].piece == PieceEnum.KNIGHT &&
+       this.board[pos.x-2][pos.y+1].color != playerColor) ||
+
+      (this.board[pos.x-2][pos.y-1] != null &&
+       this.board[pos.x-2][pos.y-1].piece == PieceEnum.KNIGHT &&
+       this.board[pos.x-2][pos.y-1].color != playerColor) ||
+
+      (this.board[pos.x-1][pos.y-2] != null &&
+       this.board[pos.x-1][pos.y-2].piece == PieceEnum.KNIGHT &&
        this.board[pos.x-1][pos.y-2].color != playerColor))
 
     return true;
@@ -687,18 +604,18 @@ Board.prototype.isAttackedByKnight = function(playerColor, pos) {
 
 Board.prototype.isAttackedByRookOrQueen = function(playerColor, pos) {
   // Is attaked by a Rook or a Queen?
-  // Horizontally: 
+  // Horizontally:
   for (var i = pos.x + 1; i < 8; i++) {
     if (this.board[i][pos.y] != null)
       if (this.isOpponentsPiece(playerColor, PieceEnum.ROOK, i, pos.y))
         return true;
-      else break;   
+      else break;
   }
   for (var i = pos.x -1; i >= 0 ; i--) {
     if (this.board[i][pos.y] != null)
       if (this.isOpponentsPiece(playerColor, PieceEnum.ROOK, i, pos.y))
         return true;
-      else break;   
+      else break;
   }
 
   // Vertically:
@@ -706,18 +623,18 @@ Board.prototype.isAttackedByRookOrQueen = function(playerColor, pos) {
     if (this.board[pos.x][j] != null)
       if (this.isOpponentsPiece(playerColor, PieceEnum.ROOK, pos.x, j))
         return true;
-      else break;   
+      else break;
   }
   for (var j = pos.y -1; j >= 0; j--) {
     if (this.board[pos.x][j] != null)
       if (this.isOpponentsPiece(playerColor, PieceEnum.ROOK, pos.x, j))
         return true;
-      else break;   
+      else break;
   }
 }
 
 Board.prototype.isAttackedByBishopOrQueen = function(playerColor, pos) {
-outer_loop:   
+outer_loop:
   for (var i = pos.x +1; i < 8; i++) {
     for (var j = pos.y +1; j < 8; j++) {
       if (this.board[i][j] != null)
@@ -726,7 +643,7 @@ outer_loop:
         else break outer_loop;
     }
   }
-  
+
 outer_loop:
   for (var i = pos.x -1; i >= 0; i--) {
     for (var j = pos.y -1; j >= 0; j--) {
@@ -774,12 +691,9 @@ Board.prototype.isAttackedByPawn = function(playerColor, pos) {
   }
   return false;
 }
-  
+
 Board.prototype.isAttackedByKing = function(playerColor, pos) {
-  if (playerColor == Player.ColorEnum.WHITE && this.isLegalMoveKING(!playerColor, blackKingPos, pos) &&
-      !isAttacked(!playerColor, pos))
-    return true;
-  else if (playerColor == Player.ColorEnum.BLACK && this.isLegalMoveKING(!playerColor, whiteKingPos, pos) &&
+  if (this.isLegalMoveKING(!playerColor, this.kings[!playerColor].pos, pos) &&
       !isAttacked(!playerColor, pos))
     return true;
   return false;
@@ -789,7 +703,7 @@ Board.prototype.isAttacked = function(playerColor, pos) {
   if (this.isAttackedByKnight(playerColor, pos) ||
       this.isAttackedByRookOrQueen(playerColor, pos) ||
       this.isAttackedByBishopOrQueen(playerColor, pos) ||
-      this.isAttackedByPawn(playerColor, pos) || 
+      this.isAttackedByPawn(playerColor, pos) ||
       this.isAttackedByKing(playerColor, pos))
     return true;
   return false;
@@ -797,13 +711,13 @@ Board.prototype.isAttacked = function(playerColor, pos) {
 
 // The following handlers are from : http://www.html5rocks.com/en/tutorials/dnd/basics/
 function handleDragStart(e) {
-  if (getPieceInfo(this.parentNode.id).pieceColor == newGame.currentPlayer.getColor()) {
+  if (getPieceInfo(this.parentNode.id).pieceColor == game.currentPlayer.getColor()) {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData("text/plain", this.parentNode.id);
   } else {
     console.log("Error!");
   }
-  newGame.board.checkBoardCorrectness();
+  game.board.checkBoardCorrectness();
 }
 
 function handleDragOver(e) {
@@ -828,46 +742,57 @@ function handleDrop(e) {
     e.stopPropagation(); // stops the browser from redirecting.
   }
   var srcId = e.dataTransfer.getData("text/plain");
-  
+
   if (srcId != null && srcId != "") {
     var srcEl = document.getElementById(srcId);
     if (srcEl != this.parentNode) {
-      var pos1 = getPosInfo(srcId); 
+      var pos1 = getPosInfo(srcId);
       var pieceInfo = getPieceInfo(srcId);
       var pos2 = getPosInfo(this.parentNode.id);
-      var isLegal = newGame.getBoard().updateBoard(pieceInfo.piece, pos1, pos2, 
+      var isLegal = game.getBoard().updateBoard(pieceInfo.piece, pos1, pos2,
           pieceInfo.pieceColor);
-     
+
       if (isLegal != Board.UpdateStateEnum.ILLEGAL_MOVE) {
-        newGame.updateTurn();
+        game.updateTurn();
 
         if (this.innerText != "") { // Keep track of captured pieces.
-          document.getElementById("captured").innerHTML = 
+          document.getElementById("captured").innerHTML =
             document.getElementById("captured").innerHTML.concat(" ").concat(this.innerText);
         }
         this.innerText = srcEl.childNodes[0].innerText; // move piece to new location.
-        srcEl.childNodes[0].innerText = ""; // empty old location. 
-        //or srcEl.innerHTML = Board.emptyCellHTML; 
+        srcEl.childNodes[0].innerText = ""; // empty old location.
+        //or srcEl.innerHTML = Board.emptyCellHTML;
 
         if (isLegal == Board.UpdateStateEnum.PAWN_PROMOTION)
           this.innerText = "♕";
-        if (isLegal == Board.UpdateStateEnum.CASTLING_BLACK_R) {
-          document.getElementById("F1").childNodes[0].innerText = document.getElementById("H1").childNodes[0].innerText; 
+        if (isLegal == Board.UpdateStateEnum.CASTLING_RIGHT &&
+        playerColor == Player.ColorEnum.BLACK) {
+          document.getElementById("F1").childNodes[0].innerText =
+          document.getElementById("H1").childNodes[0].innerText;
           document.getElementById("H1").childNodes[0].innerText = "";
         }
-        else if (isLegal == Board.UpdateStateEnum.CASTLING_WHITE_R) {
-          document.getElementById("F8").childNodes[0].innerText = document.getElementById("H8").childNodes[0].innerText; 
+
+        else if (isLegal == Board.UpdateStateEnum.CASTLING_RIGHT &&
+        playerColor == Player.ColorEnum.WHITE) {
+          document.getElementById("F8").childNodes[0].innerText =
+          document.getElementById("H8").childNodes[0].innerText;
           document.getElementById("H8").childNodes[0].innerText = "";
         }
-        else if (isLegal == Board.UpdateStateEnum.CASTLING_BLACK_L) {
-          document.getElementById("D1").childNodes[0].innerText = document.getElementById("A1").childNodes[0].innerText; 
+
+        else if (isLegal == Board.UpdateStateEnum.CASTLING_LEFT &&
+        playerColor == Player.ColorEnum.BLACK) {
+          document.getElementById("D1").childNodes[0].innerText =
+          document.getElementById("A1").childNodes[0].innerText;
           document.getElementById("A1").childNodes[0].innerText = "";
         }
-        else if (isLegal == Board.UpdateStateEnum.CASTLING_WHITE_L) {
-          document.getElementById("D8").childNodes[0].innerText = document.getElementById("A8").childNodes[0].innerText; 
+
+        else if (isLegal == Board.UpdateStateEnum.CASTLING_LEFT &&
+        playerColor == Player.ColorEnum.WHITE) {
+          document.getElementById("D8").childNodes[0].innerText =
+          document.getElementById("A8").childNodes[0].innerText;
           document.getElementById("A8").childNodes[0].innerText = "";
         }
-      
+
       } else {
         console.log("Please try again.");
       }
@@ -896,7 +821,7 @@ function getPosInfo(id) {
   return { 'x': id.charCodeAt(0) - "A".charCodeAt(0), 'y': parseInt(id.charAt(1)) - 1}
 }
 
-function getPieceInfo(id){ 
+function getPieceInfo(id){
   var pieceNum = document.getElementById(id).innerText.charCodeAt(0);
   if (pieceNum >= 9812 && pieceNum <= 9817) {
     var pieceColor = Player.ColorEnum.WHITE;
@@ -908,7 +833,7 @@ function getPieceInfo(id){
   var piece = pieceNum - 9812;
   if (pieceColor == Player.ColorEnum.BLACK) {
     piece -= 6;
-  }  
+  }
 
   return { 'piece' : piece, 'pieceColor': pieceColor }
 }
@@ -930,6 +855,7 @@ function Game() {
   this.currentPlayer = this.player1;
   this.board = new Board();
   this.board.drawBoard();
+
 }
 
 Game.prototype.getBoard = function() {
@@ -947,7 +873,7 @@ Game.prototype.updateTurn = function () {
 }
 
 window.onload = function(){
-  newGame = new Game();
+  game = new Game();
 };
 
 
