@@ -188,12 +188,14 @@ function Board() {
       this.board[i][j] = null;
     }
   }
+  this.kings = new Array(2);
 }
 
 Board.prototype.initForNewGame = function() {
   var initPieces = [ PieceEnum.ROOK, PieceEnum.KNIGHT, PieceEnum.BISHOP,
     PieceEnum.QUEEN, PieceEnum.KING, PieceEnum.BISHOP, PieceEnum.KNIGHT,
     PieceEnum.ROOK ];
+
   for (var i = 0; i < initPieces.length; i++) {
     this.placePiece(initPieces[i], Player.ColorEnum.BLACK, Pos(i, 0));
     this.placePiece(initPieces[i], Player.ColorEnum.WHITE, Pos(i, 7));
@@ -201,26 +203,23 @@ Board.prototype.initForNewGame = function() {
     this.placePiece(PieceEnum.PAWN, Player.ColorEnum.BLACK, Pos(i, 1));
     this.placePiece(PieceEnum.PAWN, Player.ColorEnum.WHITE, Pos(i, 6));
   }
+}
 
-  // Initialize King variables:
-  var initKing = function(y) {
-    return {
+Board.prototype.placePiece = function(piece, color, pos, opt_kingState) {
+  this.board[pos.x][pos.y] = { 'piece' : piece, 'color' : color};
+
+  if (piece == PieceEnum.KING) {
+    // Initialize King variables:
+    var kingState = opt_kingState || {
       'inCheck'       : false, // Updated every single move.
       'checkedFrom'   : null,  // TODO : update variables when check is undone.
       //Castling variables, keep track if castling is legal.
       'rightCastling' : true,
       'leftCastling'  : true,
-      'pos'           : Pos(4, y)
+      'pos'           : pos
     }
+    this.kings[color] = kingState;
   }
-
-  this.kings = new Array();
-  this.kings[Player.ColorEnum.BLACK] = initKing(0);
-  this.kings[Player.ColorEnum.WHITE] = initKing(7);
-}
-
-Board.prototype.placePiece = function(piece, color, pos) {
-  this.board[pos.x][pos.y] = { 'piece' : piece, 'color' : color};
 }
 
 Board.prototype.checkBoardCorrectness = function() {
