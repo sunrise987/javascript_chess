@@ -31,6 +31,10 @@ function Player(color) {
   this.color = color;
 }
 
+function Pos(x, y) {
+  return {'x' : x, 'y' : y};
+}
+
 Player.prototype.getColor = function () {
   return this.color;
 }
@@ -220,7 +224,7 @@ function Board () {
       //Castling variables, keep track if castling is legal.
       'rightCastling' : true,
       'leftCastling'  : true,
-      'pos'           : { 'x' : 4, 'y' : y}
+      'pos'           : Pos(4, y)
     }
   }
 
@@ -334,7 +338,7 @@ Board.prototype.isCheck = function(playerColor, kingColor, pos1, pos2) {
   this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y];
   this.board[pos1.x][pos1.y] = null;
 
-  var pos = { 'x' : 0, 'y' : 0 };
+  var pos = Pos(0, 0);
 
   // Iterate over all the board.
   for (var i = 0; i < 8; i++) {
@@ -382,7 +386,7 @@ Board.prototype.checkMate = function(playerColor) {
     return false;
 
   // 2. Cannot move the king.
-  var pos2 = { 'x' : 0, 'y' : 0 }
+  var pos2 = Pos(0, 0);
   for (var i = -1; i <= 1; i++) {
     for (var j = -1; j <= 1; j++) {
 
@@ -434,7 +438,7 @@ attackedPos) {
 
       // for all positions in between:
       for (var j = start + 1; j < end; j++) {
-        var pos2 = { 'x' : attackingPos.x, 'y' : j};
+        var pos2 = Pos(attackingPos.x, j);
 
         if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1,
         pos2))
@@ -451,7 +455,7 @@ attackedPos) {
 
       // for all positions in between:
       for (var i = start + 1; i < end; i++) {
-        var pos2 = { 'x' : i, 'y' : attackingPos.y};
+        var pos2 = Pos(i, attackingPos.y);
 
         if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1,
         pos2))
@@ -821,8 +825,9 @@ function pawnPromotion() {
     </div>
 */
 }
+
 function getPosInfo(id) {
-  return { 'x': id.charCodeAt(0) - "A".charCodeAt(0), 'y': parseInt(id.charAt(1)) - 1}
+  return Pos(id.charCodeAt(0) - "A".charCodeAt(0), parseInt(id.charAt(1)) - 1);
 }
 
 function getPieceInfo(id){
