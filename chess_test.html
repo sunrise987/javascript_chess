@@ -11,12 +11,31 @@
   <script src="resources/qunit.js"></script>
   <script src="chess.js"></script>
   <script>
-    test("Board isOkMove test", function() {
+    test("Board isOkMove PAWN", function() {
       var board = new Board();
-      var value = board.isOkMove(PieceEnum.PAWN,
-                                 { 'x': 0, 'y': 1 }, { 'x': 0, 'y': 2 },
-                                 Player.ColorEnum.BLACK);
-      equal(value, Board.UpdateStateEnum.OK_MOVE,
+      // One step up, black.
+      equal(board.isOkMove(PieceEnum.PAWN,
+                           { 'x': 0, 'y': 1 }, { 'x': 0, 'y': 2 },
+                           Player.ColorEnum.BLACK),
+            Board.UpdateStateEnum.OK_MOVE,
+            "We expect value to be OK_MOVE");
+      // Two step up, black.
+      equal(board.isOkMove(PieceEnum.PAWN,
+                           { 'x': 0, 'y': 1 }, { 'x': 0, 'y': 3 },
+                           Player.ColorEnum.BLACK),
+            Board.UpdateStateEnum.OK_MOVE,
+            "We expect value to be OK_MOVE");
+      // One step up, white.
+      equal(board.isOkMove(PieceEnum.PAWN,
+                           { 'x': 0, 'y': 6 }, { 'x': 0, 'y': 5 },
+                           Player.ColorEnum.WHITE),
+            Board.UpdateStateEnum.OK_MOVE,
+            "We expect value to be OK_MOVE");
+      // Two step up, white.
+      equal(board.isOkMove(PieceEnum.PAWN,
+                           { 'x': 0, 'y': 6 }, { 'x': 0, 'y': 4 },
+                           Player.ColorEnum.WHITE),
+            Board.UpdateStateEnum.OK_MOVE,
             "We expect value to be OK_MOVE");
     });
   </script>
