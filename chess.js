@@ -180,41 +180,27 @@ Board.prototype.isLegalMoveKING = function(playerColor, pos1, pos2) {
 }
 
 // Board:
-function Board () {
+function Board() {
   this.board = new Array(8);
   for (var i = 0; i < 8; i++) {
     this.board[i] = new Array(8);
-  }
-  // Initialize positions on board:
-  this.board[0][0] = { 'piece' : PieceEnum.ROOK, 'color' : Player.ColorEnum.BLACK };
-  this.board[1][0] = { 'piece' : PieceEnum.KNIGHT, 'color' : Player.ColorEnum.BLACK };
-  this.board[2][0] = { 'piece' : PieceEnum.BISHOP, 'color' : Player.ColorEnum.BLACK };
-  this.board[3][0] = { 'piece' : PieceEnum.QUEEN, 'color' : Player.ColorEnum.BLACK };
-  this.board[4][0] = { 'piece' : PieceEnum.KING, 'color' : Player.ColorEnum.BLACK };
-  this.board[5][0] = { 'piece' : PieceEnum.BISHOP, 'color' : Player.ColorEnum.BLACK };
-  this.board[6][0] = { 'piece' : PieceEnum.KNIGHT, 'color' : Player.ColorEnum.BLACK };
-  this.board[7][0] = { 'piece' : PieceEnum.ROOK, 'color' : Player.ColorEnum.BLACK };
-  for (var i = 0; i < 8; i++) {
-    this.board[i][1] = { 'piece' : PieceEnum.PAWN, 'color' : Player.ColorEnum.BLACK };
-  }
-
-  for (var j = 2; j < 6; j++) {
-    for (var i = 0; i < 8; i++) {
+    for (var j = 0; j < 8; j++) {
       this.board[i][j] = null;
     }
   }
+}
 
-  for (var i = 0; i < 8; i++) {
-    this.board[i][6] = { 'piece' : PieceEnum.PAWN, 'color' : Player.ColorEnum.WHITE };
+Board.prototype.initForNewGame = function() {
+  var initPieces = [ PieceEnum.ROOK, PieceEnum.KNIGHT, PieceEnum.BISHOP,
+    PieceEnum.QUEEN, PieceEnum.KING, PieceEnum.BISHOP, PieceEnum.KNIGHT,
+    PieceEnum.ROOK ];
+  for (var i = 0; i < initPieces.length; i++) {
+    this.placePiece(initPieces[i], Player.ColorEnum.BLACK, Pos(i, 0));
+    this.placePiece(initPieces[i], Player.ColorEnum.WHITE, Pos(i, 7));
+
+    this.placePiece(PieceEnum.PAWN, Player.ColorEnum.BLACK, Pos(i, 1));
+    this.placePiece(PieceEnum.PAWN, Player.ColorEnum.WHITE, Pos(i, 6));
   }
-  this.board[0][7] = { 'piece' : PieceEnum.ROOK, 'color' : Player.ColorEnum.WHITE};
-  this.board[1][7] = { 'piece' : PieceEnum.KNIGHT, 'color' : Player.ColorEnum.WHITE};
-  this.board[2][7] = { 'piece' : PieceEnum.BISHOP, 'color' : Player.ColorEnum.WHITE};
-  this.board[3][7] = { 'piece' : PieceEnum.QUEEN, 'color' : Player.ColorEnum.WHITE};
-  this.board[4][7] = { 'piece' : PieceEnum.KING, 'color' : Player.ColorEnum.WHITE};
-  this.board[5][7] = { 'piece' : PieceEnum.BISHOP, 'color' : Player.ColorEnum.WHITE};
-  this.board[6][7] = { 'piece' : PieceEnum.KNIGHT, 'color' : Player.ColorEnum.WHITE};
-  this.board[7][7] = { 'piece' : PieceEnum.ROOK, 'color' : Player.ColorEnum.WHITE};
 
   // Initialize King variables:
   var initKing = function(y) {
@@ -231,8 +217,10 @@ function Board () {
   this.kings = new Array();
   this.kings[Player.ColorEnum.BLACK] = initKing(0);
   this.kings[Player.ColorEnum.WHITE] = initKing(7);
+}
 
-  //  // Keep track of Kings.
+Board.prototype.placePiece = function(piece, color, pos) {
+  this.board[pos.x][pos.y] = { 'piece' : piece, 'color' : color};
 }
 
 Board.prototype.checkBoardCorrectness = function() {
@@ -568,10 +556,6 @@ Board.prototype.isOpponentsPiece = function(playerColor, piece, x, y) {
       (this.board[x][y].piece == piece || this.board[x][y].piece == PieceEnum.QUEEN))
 }
 
-Board.prototype.isAttackedFrom = function(playerColor, pos, pos_in_check) {
-  console.log("bdds");
-
-}
 Board.prototype.isAttackedByKnight = function(playerColor, pos) {
   // Is attacked by a Knight?
   if ((this.board[pos.x+1][pos.y+2] != null &&
@@ -863,6 +847,7 @@ function Game() {
   this.player2 = new Player(Player.ColorEnum.BLACK);
   this.currentPlayer = this.player1;
   this.board = new Board();
+  this.board.initForNewGame();
   this.board.drawBoard();
 
 }
