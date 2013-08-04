@@ -421,7 +421,8 @@ Board.prototype.checkMate = function(playerColor) {
 
 // TODO: A part of this function is very similar to isLegalMoveROOK function. Think about a way to refactor
 // both functions so that you can share code.
-Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos, attackedPos) {
+Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos,
+attackedPos) {
   var piecePositions = Board.getAllPieces(playerColor);
 
   if (attakingPos.x == attackedPos.x) { // Vertical.
@@ -435,7 +436,8 @@ Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos, att
       for (var j = start + 1; j < end; j++) {
         var pos2 = { 'x' : attackingPos.x, 'y' : j};
 
-        if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
+        if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1,
+        pos2))
           return true;
       }
     }
@@ -451,7 +453,8 @@ Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos, att
       for (var i = start + 1; i < end; i++) {
         var pos2 = { 'x' : i, 'y' : attackingPos.y};
 
-        if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1, pos2))
+        if (this.isLegalMove(this.board[pos1.x][pos1.y].piece, playerColor, pos1,
+        pos2))
           return true;
       }
     }
@@ -460,11 +463,13 @@ Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos, att
   }
 }
 
-Board.prototype.canBlockAttackFromBishop = function(playerColor, attackingPos, attackedPos) {
+Board.prototype.canBlockAttackFromBishop = function(playerColor, attackingPos,
+attackedPos) {
 
 }
 
-Board.prototype.canBlockAttackFromQueen = function(playerColor, attackingPos, attackedPos) {}
+Board.prototype.canBlockAttackFromQueen = function(playerColor, attackingPos,
+attackedPos) {}
 
 
 Board.prototype.updateBoard = function(piece, pos1, pos2, playerColor) {
@@ -494,8 +499,7 @@ Board.prototype.updateMoveOnBoard = function(piece, playerColor, pos1, pos2) {
   if (piece == PieceEnum.KING) {
       this.kings[playerColor].rightCastling = false;
       this.kings[playerColor].leftCastling = false;
-      this.kings[playerColor].pos.x = pos2.x;
-      this.kings[playerColor].pos.y = pos2.y;
+      this.kings[playerColor].pos = pos2;
   }
 
   // If Pawn reached end, promote it.
@@ -512,7 +516,7 @@ Board.prototype.updateMoveOnBoard = function(piece, playerColor, pos1, pos2) {
 }
 
 Board.prototype.performCastling = function(piece, pos1, pos2, playerColor) {
-  if (piece == PieceEnum.KING)
+  if (piece != PieceEnum.KING)
     return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
   var y = 0;
