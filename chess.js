@@ -137,30 +137,9 @@ Board.prototype.isLegalMovePAWN = function(playerColor, pos1, pos2) {
 }
 
 Board.prototype.isLegalMoveBISHOP = function(playerColor, pos1, pos2) {
-  diffX = pos2.x - pos1.x;
-  diffY = pos2.y - pos1.y;
-  if (Math.abs(diffX) != Math.abs(diffY))
+  if (this.pathOfBishop(playerColor, pos1, pos2) == null)
     return false;
-  else if (this.board[pos2.x][pos2.y] != null &&
-      this.board[pos2.x][pos2.y].color == playerColor)
-    return false;
-  else {
-    var i = pos1.x;
-    var j = pos1.y;
-
-    while (i != pos2.x && j != pos2.y) {
-      if (diffY > 0) j++;
-      else j--;
-      if (diffX > 0) i++;
-      else i--;
-      if (i == pos2.x || j == pos2.y)
-        break;
-
-      if (this.board[i][j] != null)
-        return false;
-    }
-  }
-  return true;
+  else return true;
 }
 
 Board.prototype.isLegalMoveQUEEN = function(playerColor, pos1, pos2) {
@@ -174,7 +153,8 @@ Board.prototype.isLegalMoveKING = function(playerColor, pos1, pos2) {
   else if ((pos1.x +1 == pos2.x && (pos1.y == pos2.y || pos1.y +1 == pos2.y || pos1.y -1 == pos2.y)) ||
       (pos1.x -1 == pos2.x && (pos1.y == pos2.y || pos1.y +1 == pos2.y || pos1.y -1 == pos2.y)) ||
       (pos1.x == pos2.x && (pos1.y +1 == pos2.y || pos1.y -1 == pos2.y)))
-    return true;
+      if (!isAttacked(playerColor, pos2))
+        return true;
 
   return false;
 }
@@ -308,7 +288,7 @@ Board.prototype.isOkMove = function(piece, pos1, pos2, playerColor) {
     return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
   // 3. Move if currentPlayer does not yield into a check to currentPlayer's King.
-  if (this.isCheck(playerColor, playerColor, pos1, pos2) == Board.UpdateStateEnum.ILLEGAL_MOVE)
+  if (this.moveCausesCheck(playerColor, playerColor, pos1, pos2) == Board.UpdateStateEnum.ILLEGAL_MOVE)
     return Board.UpdateStateEnum.ILLEGAL_MOVE;
 
   // Is game over?
@@ -322,8 +302,22 @@ Board.prototype.isOkMove = function(piece, pos1, pos2, playerColor) {
   return Board.UpdateStateEnum.OK_MOVE;
 }
 
-// Update if a King was checked.
-Board.prototype.isCheck = function(playerColor, kingColor, pos1, pos2) {
+/* This function takes as parameters:
+ * playerColor  : the color of player who moved last.
+ * pos1         : the previous position of the piece that moved last.
+ * pos2         : the destination of last move.
+ * These three variables belong to the current player who performed the
+ * last move. This function will perform the last move, then do the check,
+ * then undo the last move and return. If the result of this check is a legal
+ * move, the actual update of last move will be done in another function.
+ * This function also takes as a parameter:
+ * kingColor    : will be used to check if the last move will cause a
+ * check to this kingColor, whether it's the current player's king or the
+ * opponent's king.
+ * Returns:
+ * true         : if move causes ckeck to kingColor.
+ * false        : if no check results from move. */
+Board.prototype.moveCausesCheck = function(playerColor, kingColor, pos1, pos2) {
   var before = this.board[pos2.x][pos2.y];
   this.board[pos2.x][pos2.y] = this.board[pos1.x][pos1.y];
   this.board[pos1.x][pos1.y] = null;
@@ -355,7 +349,7 @@ Board.prototype.isCheck = function(playerColor, kingColor, pos1, pos2) {
             this.kings[kingColor].checkedFrom = pos;
             this.kings[kingColor].rightCastling = false;
             this.kings[kingColor].leftCastling = false ;
-            console.log("Black King was checked.");
+            console.log("King was checked.");
             return Board.UpdateStateEnum.OK_MOVE;
           }
         }
@@ -383,9 +377,8 @@ Board.prototype.checkMate = function(playerColor) {
       var pos1 = this.kings[playerColor].pos;
       pos2.x = pos1.x + i;
       pos2.y = pos1.y + j;
-      if (this.isLegalMoveKING(playerColor, pos1, pos2) &&
-          !this.isAttacked(playerColor, pos2))
-      return false;
+      if (this.isLegalMoveKING(playerColor, pos1, pos2))
+        return false;
     }
   }
 
@@ -412,6 +405,44 @@ Board.prototype.checkMate = function(playerColor) {
   }
   return true;
 }
+
+/* Returns the positions on the board where there exists a piece of playerColor.
+ * */
+Board.prototype.getAllPieces = function(playerColor) {
+  var allPieces = new Array();
+  for (var i = 0; i < 8; i++) {
+    for (var j = 0; j < 8; j++) {
+      if (this.board[i][j] != null && this.board[i][j].color == playerColor)
+        allPieces.push(Pos(i, j));
+    }
+  }
+  return allPieces;
+}
+
+
+/* Checking if the current player*/
+Board.prototype.canBlockAttackFromBishop = function(playerColor, attackingPos,
+attackedPos) {
+  var path = this.pathOfBishop(playerColor, attackingPos, attackedPos);
+  var piecePositions = Board.getAllPieces(playerColor);
+  for (var i = 0; i < path.length; i++) {
+    for (var k = 0; k < piecePositions.length; k++) {
+      var piece = this.board[piecePositions[k].x][piecePositions[k].y].piece;
+      var color = this.board[piecePositions[k].x][piecePositions[k].y].color;
+      if (isLegalMove(piece, color, piecePositions[k], path[i]))
+        return true;
+    }
+  }
+  return false;
+}
+
+Board.prototype.canBlockAttackFromQueen = function(playerColor, attackingPos,
+attackedPos) {
+  return (canBlockAttackFromRook(playerColor, attackingPos, attackedPos) ||
+    canBlockAttackFromRook(playerColor, attackingPos, attackedPos))
+}
+
+
 
 // TODO: A part of this function is very similar to isLegalMoveROOK function. Think about a way to refactor
 // both functions so that you can share code.
@@ -457,14 +488,35 @@ attackedPos) {
   }
 }
 
-Board.prototype.canBlockAttackFromBishop = function(playerColor, attackingPos,
-attackedPos) {
+Board.prototype.pathOfBishop = function(playerColor, pos1, pos2) {
+  diffX = pos2.x - pos1.x;
+  diffY = pos2.y - pos1.y;
+  var path = new Array();
+  if (Math.abs(diffX) != Math.abs(diffY))
+    return null;
+  else if (this.board[pos2.x][pos2.y] != null &&
+      this.board[pos2.x][pos2.y].color == playerColor)
+    return null;
+  else {
+    var i = pos1.x;
+    var j = pos1.y;
 
+    while (i != pos2.x && j != pos2.y) {
+      if (diffY > 0) j++;
+      else j--;
+      if (diffX > 0) i++;
+      else i--;
+      if (i == pos2.x || j == pos2.y)
+        break;
+
+      if (this.board[i][j] != null)
+        return null;
+      else
+        path.push(Pos(i, j));
+    }
+  }
+  return path;
 }
-
-Board.prototype.canBlockAttackFromQueen = function(playerColor, attackingPos,
-attackedPos) {}
-
 
 Board.prototype.updateBoard = function(piece, pos1, pos2, playerColor) {
 

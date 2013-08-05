@@ -109,7 +109,7 @@ test("Board isOkMove PAWN", function() {
         "We expect value to be OK_MOVE");
 });
 
-test("Board isCheck 1", function() {
+test("Board moveCausesCheck 1", function() {
   var board = new Board();
   board.placePiece(PieceEnum.KING, Player.ColorEnum.BLACK, Pos(0, 0),
                    { 'inCheck': false,
@@ -125,15 +125,15 @@ test("Board isCheck 1", function() {
                      'leftCastling' : false });
   board.placePiece(PieceEnum.ROOK, Player.ColorEnum.WHITE, Pos(5, 0));
 
-  // Lets move the black's queen up and check that isCheck returns ILLEGAL_MOVE
+  // Lets move the black's queen up and check that moveCausesCheck returns ILLEGAL_MOVE
   // due to white's rook checking black's king.
-  equal(board.isCheck(Player.ColorEnum.BLACK, Player.ColorEnum.BLACK,
+  equal(board.moveCausesCheck(Player.ColorEnum.BLACK, Player.ColorEnum.BLACK,
                       Pos(3, 0), Pos(3, 5)),
         Board.UpdateStateEnum.ILLEGAL_MOVE,
         "Can't move black's queen because otherwise black's king is checked");
 
   // But black's queen can kill the rook.
-  equal(board.isCheck(Player.ColorEnum.BLACK, Player.ColorEnum.BLACK,
+  equal(board.moveCausesCheck(Player.ColorEnum.BLACK, Player.ColorEnum.BLACK,
                       Pos(3, 0), Pos(5, 0)),
         Board.UpdateStateEnum.OK_MOVE,
         "Black's queen should be able to kill white's rook");
