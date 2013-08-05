@@ -217,6 +217,9 @@ Board.prototype.placePiece = function(piece, color, pos, opt_kingState) {
       'rightCastling' : true,
       'leftCastling'  : true,
       'pos'           : pos
+    };
+    if (opt_kingState && opt_kingState.pos == undefined) {
+      opt_kingState.pos = pos;
     }
     this.kings[color] = kingState;
   }
@@ -336,7 +339,7 @@ Board.prototype.isCheck = function(playerColor, kingColor, pos1, pos2) {
         pos.x = i;
         pos.y = j;
         if (this.isLegalMove(this.board[i][j].piece, this.board[i][j].color, pos,
-        this.kings[kingColor].pos)) {
+                             this.kings[kingColor].pos)) {
 
           // put back the pieces where they were.
           this.board[pos1.x][pos1.y] = this.board[pos2.x][pos2.y];
