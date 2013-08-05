@@ -189,3 +189,45 @@ test("Board moveCausesCheck Queen 2", function() {
         Board.UpdateStateEnum.OK_MOVE,
         "Black's queen should be able to kill white's queen");
 });
+
+test("Board getAllPieces", function() {
+  var board = new Board();
+  board.placePiece(PieceEnum.PAWN, Player.ColorEnum.WHITE, Pos(4, 4));
+  board.placePiece(PieceEnum.PAWN, Player.ColorEnum.BLACK, Pos(6, 5));
+  board.placePiece(PieceEnum.KNIGHT, Player.ColorEnum.WHITE, Pos(1, 7));
+  board.placeKings(Pos(7, 7), Pos(0, 0));
+
+  var comparator = function(a,b){
+    if(a.x == b.x)
+      return a.y - b.y;
+    return a.x - b.x;
+  };
+
+  {
+    var actual = board.getAllPieces(Player.ColorEnum.WHITE);
+    actual.sort(comparator);
+    var expected = [Pos(4, 4), Pos(1, 7), Pos(7, 7)];
+    expected.sort(comparator);
+    deepEqual(actual, expected,
+              "Array of all pieces belonging to white on the board, sorted.");
+  }
+
+  {
+    var actual = board.getAllPieces(Player.ColorEnum.BLACK);
+    actual.sort(comparator);
+    var expected = [Pos(6, 5), Pos(0, 0)];
+    expected.sort(comparator);
+    deepEqual(actual, expected,
+              "Array of all pieces belong to black on the board, sorted");
+  }
+});
+
+test("Board canBlockAttackFromBishop", function() {
+  var board = new Board();
+  board.placePiece(PieceEnum.BISHOP, Player.ColorEnum.WHITE, Pos(4, 4));
+  board.placePiece(PieceEnum.PAWN, Player.ColorEnum.BLACK, Pos(2, 1));
+  board.placePiece(PieceEnum.KNIGHT, Player.ColorEnum.WHITE, Pos(1, 7));
+  board.placeKings(Pos(7, 7), Pos(0, 0));
+
+  equal(board.canBlockAttackFromBishop(Player.ColorEnum.WHITE, Pos(4, 4), Pos(0, 0)), true);
+});

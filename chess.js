@@ -407,6 +407,7 @@ Board.prototype.checkMate = function(playerColor) {
 }
 
 /* Returns the positions on the board where there exists a piece of playerColor.
+ * Order of pieces is not considered.
  * */
 Board.prototype.getAllPieces = function(playerColor) {
   var allPieces = new Array();
@@ -424,12 +425,12 @@ Board.prototype.getAllPieces = function(playerColor) {
 Board.prototype.canBlockAttackFromBishop = function(playerColor, attackingPos,
 attackedPos) {
   var path = this.pathOfBishop(playerColor, attackingPos, attackedPos);
-  var piecePositions = Board.getAllPieces(playerColor);
+  var piecePositions = this.getAllPieces(playerColor);
   for (var i = 0; i < path.length; i++) {
     for (var k = 0; k < piecePositions.length; k++) {
       var piece = this.board[piecePositions[k].x][piecePositions[k].y].piece;
       var color = this.board[piecePositions[k].x][piecePositions[k].y].color;
-      if (isLegalMove(piece, color, piecePositions[k], path[i]))
+      if (this.isLegalMove(piece, color, piecePositions[k], path[i]))
         return true;
     }
   }
@@ -448,7 +449,7 @@ attackedPos) {
 // both functions so that you can share code.
 Board.prototype.canBlockAttackFromRook = function(playerColor, attackingPos,
 attackedPos) {
-  var piecePositions = Board.getAllPieces(playerColor);
+  var piecePositions = this.getAllPieces(playerColor);
 
   if (attakingPos.x == attackedPos.x) { // Vertical.
     var start = Math.min(attackingPos.y, attackedPos.y);
